@@ -2,6 +2,7 @@
 import psycopg2
 import sys
 import datetime
+import time
 
 
 # Abre la coneccion y la request
@@ -17,9 +18,9 @@ print("conectado")
 
 
 # FECHA DEL DOMINGO ANTERIOR A LA ACTUALIZACION 
-actualizacion = '25/10/2020'
+actualizacion = '1/11/2020'
 #PERIODO  DE LA SEMANA QUE SE ACTUALIZA, LUNE A DOMINGO
-periodo = '19/10 a 25/10'  
+periodo = '26/10 a 1/11'
 
 
 print(datetime.datetime.today())
@@ -47,6 +48,7 @@ print('ACTUALIZACION VALORES PARA EL MEDIODIA DEL FIN DE SEMANA ACTUAL')
 cur.execute("UPDATE tablero_regeneracion_urbana.data_auxiliar a SET findsemana = b.semana, franja_finde= '1-Mediodia',dispositivos_finde= b.n_lineas from (select fraccion, a.semana,round(median (a.moviles::int)) as n_lineas from datos.dispositivos_por_grilla a left  join aux.calendario_2020 c using (fecha) where c.dia_semana IN (5,6,7,8) AND a.semana = "+str(semana_actual)+" and hora between '11:00' and '15:00'group by fraccion,a.semana)b where a.id_cuadricula= b.fraccion  and b.semana::text= a.semana::text and franja= '1-Mediodia'and dispositivos_finde is null")
 connection.commit()
 print('TERMINE DE ACTUALIZAR LOS VALORES DEL FIN DE SEMANA')
+time.sleep(5)
 
 
 #1B UPDATES MEDIODIA SEMANA ANTERIOR
@@ -63,8 +65,9 @@ cur.execute("UPDATE tablero_regeneracion_urbana.data_auxiliar a SET find_anterio
 connection.commit()
 print(datetime.datetime.today())
 print('TERMINE  DE ACTUALIZAR TODOS LOS VALORES PARA  LA FRANJA DEL MEDIODIA, COMENZARE CON LA FRANJA DE LA TARDE')
+time.sleep(5)
 
-#------------------------------------------COMIENZA EL BLOQUE DE LA TARDE:D--------------------------------------------------
+#--------------------------------------COMIENZA EL BLOQUE DE LA TARDE:D--------------------------------------------------
 
 #2 PRIMER INSERT Y ACTUALIZACION DE VALORES PARA LA TARDE DE LA SEMANA ACTUAL
 print('VAMOS A ACTUALIZAR POR FRANJAS HORARIAS, PRIMERO TODO LOS VALORES REFERIDOS A LA TARDE')
@@ -77,11 +80,12 @@ print(datetime.datetime.today())
 
 #2A UPDATE TARDE FIN DE SEMANA ACTUAL
 print('ACTUALIZACION VALORES PARA LA TARDE DEL FIN DE SEMANA ACTUAL')
-
+time.sleep(10)
 cur.execute("UPDATE tablero_regeneracion_urbana.data_auxiliar a SET findsemana = b.semana, franja_finde= '2-Tarde',dispositivos_finde= b.n_lineas from (select fraccion, a.semana,round(median (a.moviles::int)) as n_lineas from datos.dispositivos_por_grilla a left  join aux.calendario_2020 c using (fecha) where c.dia_semana IN (5,6,7,8) AND a.semana = "+str(semana_actual)+" and hora between '15:30' and '17:00'group by fraccion,a.semana)b where a.id_cuadricula= b.fraccion  and b.semana::text= a.semana::text and franja= '2-Tarde'and dispositivos_finde is null")
 connection.commit()
 print('TERMINE DE ACTUALIZAR LOS VALORES DEL FIN DE SEMANA')
 print(datetime.datetime.today())
+
 
 #2B UPDATES TARDE SEMANA ANTERIOR
 print('ASIGNO LOS VALORES CALCULADOS PARA EL TARDE DE LA SEMANA ANTERIOR')
@@ -97,6 +101,7 @@ connection.commit()
 
 print('TERMINE  DE ACTUALIZAR TODOS LOS VALORES PARA  LA FRANJA DEL MEDIODIA, COMENZARE CON LA FRANJA DE LA NOCHE')
 
+time.sleep(5)
 
 
 #-----------------------------------------COMIENZA EL BLOQUE DE LA NOCHE :D--------------------------------------------------
@@ -199,7 +204,8 @@ print('Termine de actualizar la fecha y el periodo correspondiente a la semana')
 #6 INSERTO LOS RESULTADO EN LA TABLA QUE ALIMENTA EL TABLERO
 
 print('INSERTO LOS DATOS EN LA TABLA QUE ALIMENTA EL TABLERO CON TODOS LOS DATOS ACTUALIZADOS')
-cur.execute("insert into tablero_regeneracion_urbana.data select id_cuadricula, poblacion, semana, franja, dispositivos_semana, findsemana, franja_finde, dispositivos_finde, semana_anterior, franja_semaant, dispositivos_seman_ante, find_anterior, franja_findeante, dispositivos_findeanter,semanprecu, franja_pre, dispositivo_semaprec, prefindsemana,  franja_prefinde, dispositivo_findprec, poblacion_pre,case when b.nombre is not null then b.nombre when b.nombre is null then 'N' else 'other' end zona_interes,actualizacion, descripcion FROM tablero_regeneracion_urbana.data_auxiliar a LEFT JOIN regeneracion.zonas b on  b.id= a.id_cuadricula where semana="+str(semana_actual))
+
+cur.execute("INSERT INTO tablero_regeneracion_urbana.data(id_cuadricula, poblacion, semana, franja, dispositivos_semana, findsemana, franja_finde, dispositivos_finde, semana_anterior, franja_semaant, dispositivos_seman_ante, find_anterior, franja_findeante, dispositivos_findeanter, semanprecu, franja_pre, dispositivo_semaprec, prefindsemana, franja_prefinde, dispositivo_findprec, poblacion_pre, zona_interes, actualizacion, descripcion)select id_cuadricula, poblacion, semana,franja, dispositivos_semana, findsemana, franja_finde, dispositivos_finde, semana_anterior, franja_semaant, dispositivos_seman_ante, find_anterior, franja_findeante, dispositivos_findeanter,semanprecu, franja_pre, dispositivo_semaprec, prefindsemana,  franja_prefinde, dispositivo_findprec, poblacion_pre,case when b.nombre is not null then b.nombre when b.nombre is null then 'N' else 'other' end zona_interes,actualizacion, descripcion FROM tablero_regeneracion_urbana.data_auxiliar a LEFT JOIN tablero_regeneracion_urbana.area_interes_grilla b on  b.id= a.id_cuadricula where semana="+str(semana_actual))
 connection.commit()
 
 print('YA PODES REFRESCAR EL TABLERO')
