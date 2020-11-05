@@ -1,4 +1,9 @@
-''' '''
+''' Este script tiene como finalidad generar un output que sirva como actualizacion para el tablero de regeneracion urbana.
+Para ello, toma los datos generados por el script 001, y va actualizando las distintas franjas horarias con los valores de los
+dispositivos registrados en la Ciudad. Los inserts se hacen distinguiendo por franja horaria, y los updates se realizan dintinguiendo
+por franja horaria, dia de semana o fin de semana, actual, anterior o de precuarentena. 
+Una vez realizados estos procesos inserta los resultados en la tabla que alimenta el tablero'''
+
 import psycopg2
 import sys
 import datetime
